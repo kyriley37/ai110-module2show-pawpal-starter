@@ -2,10 +2,71 @@
 
 ## 1. System Design
 
+ 3 core action s a user should be able to complete are
+ - User enter basic owner + pet info
+ - Track pet care tasks (walks, feeding, meds, enrichment, grooming, etc.)
+ - Generate a daily schedule/plan based on constraints and priorities
+
 **a. Initial design**
 
-- Briefly describe your initial UML design.
-- What classes did you include, and what responsibilities did you assign to each?
+The initial UML design uses a class diagram to model the PawPal+ system, focusing on the core features: entering owner/pet info, tracking care tasks, and generating schedules. The main classes are Owner, Pet, Task, and Schedule.
+
+- **Owner**: Manages user information and their pets. Responsibilities: add/remove pets, update info, retrieve pet list.
+- **Pet**: Represents individual pets with details and tasks. Responsibilities: add tasks, update info, retrieve task list.
+- **Task**: Defines care activities with scheduling details. Responsibilities: mark complete, schedule for day, update details.
+- **Schedule**: Generates daily plans. Responsibilities: add tasks, generate prioritized plan, resolve conflicts, display plan.
+
+```mermaid
+classDiagram
+    class Owner {
+        +name: string
+        +email: string
+        +phone: string
+        +pets: list[Pet]
+        +add_pet(pet: Pet)
+        +remove_pet(pet: Pet)
+        +get_pets(): list[Pet]
+        +update_info(name, email, phone)
+    }
+    class Pet {
+        +name: string
+        +species: string
+        +breed: string
+        +age: int
+        +weight: float
+        +medical_notes: string
+        +tasks: list[Task]
+        +add_task(task: Task)
+        +get_tasks(): list[Task]
+        +update_info(name, species, etc.)
+    }
+    class Task {
+        +type: string
+        +description: string
+        +duration: int
+        +priority: int
+        +frequency: string
+        +preferred_time: datetime
+        +pet: Pet
+        +completed: boolean
+        +mark_complete()
+        +schedule_for_day(date)
+        +update_details(type, priority, etc.)
+    }
+    class Schedule {
+        +date: date
+        +tasks: list[Task]
+        +constraints: dict
+        +generated_plan: list[dict]
+        +add_task(task: Task)
+        +generate_plan(priorities, constraints)
+        +resolve_conflicts()
+        +display_plan()
+    }
+    Owner ||--o{ Pet : owns
+    Pet ||--o{ Task : has
+    Schedule o--o{ Task : aggregates
+```
 
 **b. Design changes**
 
