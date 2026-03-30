@@ -106,8 +106,24 @@ classDiagram
 
 **a. How you used AI**
 
-- How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
-- What kinds of prompts or questions were most helpful?
+I used AI tools extensively throughout this project for code generation, debugging, and iterative refinement. The AI served as a collaborative coding partner, helping me rapidly prototype ideas and catch implementation issues.
+
+-
+
+- **Code generation**: The AI generated complete class skeletons with all attributes and empty method stubs, saving significant time on boilerplate. It then helped implement all method bodies with actual logic, including complex features like recurring task auto-generation using `timedelta`, conflict detection with exact-time matching, and sorting/filtering algorithms.
+
+- **Debugging and testing**: When tests failed, the AI helped identify issues like incorrect assertions in conflict detection tests. It suggested fixes and explained why certain edge cases needed coverage, such as handling None values in sorting or missing pet assignments in recurrence logic.
+
+- **Refactoring and UI integration**: The AI assisted with adding comprehensive docstrings to all methods, integrating the backend classes with Streamlit (session state, UI buttons), and enhancing the UI with professional components like dataframes and conflict warnings. It also helped structure the README with features lists and testing documentation.
+
+The most helpful prompts were specific and iterative:
+- "Implement all the methods for the classes" - led to complete, working implementations
+- "Add comprehensive docstrings" - resulted in detailed method documentation
+- "Create tests for edge cases" - built a robust 18-test suite covering recurrence, sorting, and conflicts
+- "Update the UI to use Schedule methods" - integrated sorting, filtering, and conflict detection into Streamlit
+- "Fix this test failure" - resolved assertion mismatches and improved test accuracy
+
+These targeted prompts were more effective than vague requests, as they allowed the AI to provide precise, actionable code changes while explaining the reasoning behind each implementation decision.
 
 **b. Judgment and verification**
 
@@ -120,13 +136,29 @@ classDiagram
 
 **a. What you tested**
 
-- What behaviors did you test?
-- Why were these tests important?
+I implemented a comprehensive test suite with 18 tests covering the core scheduling behaviors and edge cases. The tests were organized into four categories:
+
+- **Recurrence Logic** (5 tests): Verified that daily and weekly tasks auto-generate next occurrences using `timedelta`, confirmed non-recurring tasks don't create duplicates, and tested edge cases like missing pet assignments or preferred times.
+
+- **Sorting Correctness** (5 tests): Validated chronological ordering of tasks by preferred time, proper handling of None values (sorted first), stability with already-sorted tasks, and behavior with all tasks at the same time.
+
+- **Conflict Detection** (6 tests): Tested exact-time matching for multiple tasks at the same HH:MM, single-warning output for 2+ conflicting tasks, and edge cases like tasks without times, empty schedules, or single tasks.
+
+- **Core Operations** (2 tests): Covered basic task completion and pet task management to ensure integration between Owner, Pet, and Task objects.
+
+These tests were important because they validated the three critical features (recurrence, sorting, conflict detection) that make PawPal+ intelligent. They covered both happy paths (normal usage) and edge cases (missing data, boundary conditions) to ensure the system is robust and reliable for real pet owners.
 
 **b. Confidence**
 
-- How confident are you that your scheduler works correctly?
-- What edge cases would you test next if you had more time?
+I am highly confident that the scheduler works correctly. All 18 tests pass, covering the core algorithms end-to-end. The system handles the specified requirements well, with validated recurrence logic, accurate sorting, and reliable conflict detection. Core operations are tested for integration, and the exact-time conflict strategy is intentionally simple but effective for the pet care scenario.
+
+If I had more time, I would test additional edge cases such as:
+- Duration-aware conflict detection (checking for task overlaps beyond exact times)
+- Multi-pet scenarios with shared tasks or conflicting schedules across pets
+- Time zone handling for owners traveling with pets
+- Long-term scheduling (weekly/monthly plans) and recurrence chain validation
+- UI stress testing with large numbers of tasks/pets to ensure Streamlit performance
+- Integration testing with real datetime scenarios (daylight saving, leap years)
 
 ---
 
