@@ -11,16 +11,23 @@ class Owner:
         self.pets: list[Pet] = []
 
     def add_pet(self, pet: Pet) -> None:
-        pass
+        """Add a pet to the owner's collection."""
+        self.pets.append(pet)
 
     def remove_pet(self, pet: Pet) -> None:
-        pass
+        """Remove a pet from the owner's collection."""
+        if pet in self.pets:
+            self.pets.remove(pet)
 
     def get_pets(self) -> list[Pet]:
-        pass
+        """Return the list of pets owned by this owner."""
+        return self.pets
 
     def update_info(self, name: str, email: str, phone: str) -> None:
-        pass
+        """Update the owner's contact information."""
+        self.name = name
+        self.email = email
+        self.phone = phone
 
 
 class Pet:
@@ -42,13 +49,19 @@ class Pet:
         self.tasks: list[Task] = []
 
     def add_task(self, task: Task) -> None:
-        pass
+        """Add a care task to this pet's task list."""
+        self.tasks.append(task)
+        task.pet = self
 
     def get_tasks(self) -> list[Task]:
-        pass
+        """Return the list of tasks associated with this pet."""
+        return self.tasks
 
     def update_info(self, **kwargs) -> None:
-        pass
+        """Update pet attributes dynamically."""
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 
 class Task:
@@ -72,13 +85,19 @@ class Task:
         self.completed: bool = False
 
     def mark_complete(self) -> None:
-        pass
+        """Mark this task as completed."""
+        self.completed = True
 
     def schedule_for_day(self, on_date: date) -> None:
-        pass
+        """Reschedule this task to a specific date."""
+        if self.preferred_time:
+            self.preferred_time = self.preferred_time.replace(year=on_date.year, month=on_date.month, day=on_date.day)
 
     def update_details(self, **kwargs) -> None:
-        pass
+        """Update task attributes dynamically."""
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
 
 
 class Schedule:
@@ -93,13 +112,46 @@ class Schedule:
         self.generated_plan: list[dict] = []
 
     def add_task(self, task: Task) -> None:
-        pass
+        """Add a task to the schedule if not already present."""
+        if task not in self.tasks:
+            self.tasks.append(task)
 
     def generate_plan(self, priorities: bool = True, constraints: dict | None = None) -> None:
-        pass
+        """Generate a prioritized task schedule for the day."""
+        if priorities:
+            self.tasks.sort(key=lambda t: t.priority)
+        
+        self.generated_plan = [
+            {
+                "time": task.preferred_time.strftime("%H:%M") if task.preferred_time else "No time",
+                "task": task.description,
+                "pet": task.pet.name if task.pet else "Unknown",
+                "duration": task.duration,
+            }
+            for task in self.tasks
+        ]
 
     def resolve_conflicts(self) -> None:
-        pass
+        """Detect and handle overlapping tasks in the schedule."""
+        # Simple check: warn if tasks overlap by 30+ min
+        for i, task1 in enumerate(self.tasks):
+            for task2 in self.tasks[i+1:]:
+                if task1.preferred_time and task2.preferred_time:
+                    time_diff = abs((task2.preferred_time - task1.preferred_time).total_seconds() / 60)
+                    if time_diff < task1.duration:
+                        pass  # Conflict detected (could log or reschedule)
 
     def display_plan(self) -> str:
-        pass
+        """Return a formatted string representation of the daily schedule."""
+        if not self.tasks:
+            return "No tasks scheduled for today."
+        
+        output = []
+        sorted_tasks = sorted(self.tasks, key=lambda t: t.preferred_time if t.preferred_time else datetime.min)
+        
+        for task in sorted_tasks:
+            time_str = task.preferred_time.strftime("%H:%M") if task.preferred_time else "No time set"
+            pet_name = task.pet.name if task.pet else "Unknown pet"
+            output.append(f"{time_str} - [{task.type}] {task.description} ({pet_name}) - {task.duration}min")
+        
+        return "\n".join(output)

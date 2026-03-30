@@ -71,7 +71,11 @@ classDiagram
 **b. Design changes**
 
 - Did your design change during implementation?
+  - Yes. As the requirements clarified, I moved from a flat Task-centric model to a stronger domain model where Schedule owns task placement and Owner links to daily schedules.
 - If yes, describe at least one change and why you made it.
+  - Originally, `Task.schedule_for_day()` was intended to do assignment logic, but I changed it to keep `Task` as a data object and move all planning/resolution into `Schedule`. This simplifies responsibility and avoids duplicated scheduling logic.
+  - Added `Owner.schedules: list[Schedule]` and introduced a `ScheduleEntry` concept (time slot + task + pet) to track exact placement and avoid contention.
+  - Kept `Pet.tasks` in place but made `Schedule` the source of truth for “what happens today”, while `Task` remains generic.
 
 ---
 
