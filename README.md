@@ -70,3 +70,42 @@ Detecting scheduling conflicts...
 Found conflicts:
   ⚠️ CONFLICT at 09:00: Fido morning walk (Fido), Fido grooming (Fido)
 ```
+
+## Testing PawPal+
+
+PawPal+ includes a comprehensive test suite covering core scheduling behaviors and edge cases.
+
+### Run Tests
+
+```bash
+python -m pytest tests/test_pawpal.py -v
+```
+
+### Test Coverage
+
+The test suite includes **18 tests** across four categories:
+
+1. **Recurrence Logic** (5 tests)
+   - Verifies that daily/weekly tasks auto-generate next occurrences using `timedelta`
+   - Confirms non-recurring tasks don't create duplicates
+   - Edge cases: missing pet assignment, missing preferred time
+
+2. **Sorting Correctness** (5 tests)
+   - Validates chronological ordering of tasks by time
+   - Handles None values (sorted first)
+   - Tests stability with already-sorted and same-time tasks
+
+3. **Conflict Detection** (6 tests)
+   - Identifies multiple tasks at the exact same time (HH:MM)
+   - Validates single-warning output for 2+ tasks at same time
+   - Edge cases: tasks without times, empty schedule, single task
+
+4. **Core Operations** (2 tests)
+   - Task completion and pet task management
+   - Basic integration between Owner, Pet, and Task objects
+
+### Confidence Level
+
+⭐⭐⭐⭐⭐ **5/5 stars**
+
+**Rationale**: All 18 tests pass, covering happy paths, edge cases, and the three critical features (recurrence, sorting, conflict detection). The exact-time conflict detection is intentionally simple but robust. Core operations are validated end-to-end. System is production-ready for the specified requirements.
