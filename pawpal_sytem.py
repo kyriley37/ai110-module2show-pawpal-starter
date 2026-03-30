@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import typing
 
 class Owner:
@@ -85,8 +85,41 @@ class Task:
         self.completed: bool = False
 
     def mark_complete(self) -> None:
-        """Mark this task as completed."""
+        """Mark this task as completed and create next occurrence if recurring.
+        
+        For tasks with frequency="Daily", creates a new task instance for tomorrow at the same time.
+        For tasks with frequency="Weekly", creates a new task instance for next week at the same time.
+        Uses timedelta for accurate date calculations.
+        
+        Only generates next occurrence if the task is associated with a pet and has a preferred_time.
+        """
         self.completed = True
+        
+        # Create next occurrence for recurring tasks
+        if self.frequency.lower() == "daily" and self.pet and self.preferred_time:
+            next_time = self.preferred_time + timedelta(days=1)
+            next_task = Task(
+                type=self.type,
+                description=self.description,
+                duration=self.duration,
+                priority=self.priority,
+                frequency=self.frequency,
+                preferred_time=next_time,
+                pet=self.pet
+            )
+            self.pet.add_task(next_task)
+        elif self.frequency.lower() == "weekly" and self.pet and self.preferred_time:
+            next_time = self.preferred_time + timedelta(days=7)
+            next_task = Task(
+                type=self.type,
+                description=self.description,
+                duration=self.duration,
+                priority=self.priority,
+                frequency=self.frequency,
+                preferred_time=next_time,
+                pet=self.pet
+            )
+            self.pet.add_task(next_task)
 
     def schedule_for_day(self, on_date: date) -> None:
         """Reschedule this task to a specific date."""
@@ -111,10 +144,35 @@ class Schedule:
         self.constraints: dict = constraints or {}
         self.generated_plan: list[dict] = []
 
+    def filter_tasks(self, completed: bool | None = None, pet_name: str | None = None) -> list[Task]:
+        """Filter tasks by completion status and/or pet name.
+        
+        Args:
+            completed: If True, return only completed tasks. If False, return only incomplete. If None, return all.
+            pet_name: Filter by pet name. If None, return tasks for all pets.
+        
+        Returns:
+            A filtered list of Task objects matching the criteria.
+        """
+        filtered = self.tasks
+        if completed is not None:
+            filtered = [t for t in filtered if t.completed == completed]
+        if pet_name is not None:
+            filtered = [t for t in filtered if t.pet and t.pet.name == pet_name]
+        return filtered
+
     def add_task(self, task: Task) -> None:
         """Add a task to the schedule if not already present."""
         if task not in self.tasks:
             self.tasks.append(task)
+
+    def sort_by_time(self) -> None:
+        """Sort tasks chronologically by preferred_time in ascending order.
+        
+        Tasks without a preferred_time (None) are sorted to the beginning.
+        Modifies self.tasks in place.
+        """
+        self.tasks.sort(key=lambda t: t.preferred_time if t.preferred_time else datetime.min)
 
     def generate_plan(self, priorities: bool = True, constraints: dict | None = None) -> None:
         """Generate a prioritized task schedule for the day."""
@@ -131,15 +189,35 @@ class Schedule:
             for task in self.tasks
         ]
 
-    def resolve_conflicts(self) -> None:
-        """Detect and handle overlapping tasks in the schedule."""
-        # Simple check: warn if tasks overlap by 30+ min
-        for i, task1 in enumerate(self.tasks):
-            for task2 in self.tasks[i+1:]:
-                if task1.preferred_time and task2.preferred_time:
-                    time_diff = abs((task2.preferred_time - task1.preferred_time).total_seconds() / 60)
-                    if time_diff < task1.duration:
-                        pass  # Conflict detected (could log or reschedule)
+    def detect_conflicts(self) -> list[str]:
+        """Detect task conflicts and return warning messages (lightweight strategy).
+        
+        Identifies tasks scheduled at the exact same time (HH:MM match).
+        Uses exact-time matching rather than duration overlap for simplicity and performance.
+        
+        Returns:
+            A list of warning messages (str) for each time slot with multiple tasks.
+            Empty list if no conflicts found.
+        """
+        conflicts = []
+        
+        # Group tasks by preferred_time
+        time_groups = {}
+        for task in self.tasks:
+            if task.preferred_time:
+                time_key = task.preferred_time.strftime("%H:%M")
+                if time_key not in time_groups:
+                    time_groups[time_key] = []
+                time_groups[time_key].append(task)
+        
+        # Find conflicts: multiple tasks at same time
+        for time_str, tasks in time_groups.items():
+            if len(tasks) > 1:
+                task_names = [f"{t.description} ({t.pet.name if t.pet else 'Unknown'})" for t in tasks]
+                warning = f"⚠️ CONFLICT at {time_str}: {', '.join(task_names)}"
+                conflicts.append(warning)
+        
+        return conflicts
 
     def display_plan(self) -> str:
         """Return a formatted string representation of the daily schedule."""

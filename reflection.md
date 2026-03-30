@@ -84,12 +84,21 @@ classDiagram
 **a. Constraints and priorities**
 
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
+  - The scheduler considers: task priority (1=high, 3=low), preferred_time (exact time slot), pet-specific associations, and task duration.
+  - It sorts by priority first, then we manually override with preferred_time for exact scheduling.
 - How did you decide which constraints mattered most?
+  - Priority was chosen as the primary constraint because life-critical tasks (medications, feeding) must happen.
+  - Time was secondary because pets are flexible on exact timing but not on essential care.
 
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
+  - **Exact Time Matching vs. Duration Overlap:** The `detect_conflicts()` method checks for tasks at the *exact same time* (HH:MM match) rather than checking if task durations overlap. For example, a 15-min task at 08:00 and a 30-min task at 08:15 would conflict in reality (08:00-08:15 overlap), but our scheduler only flags conflicts if both start at exactly 08:00.
 - Why is that tradeoff reasonable for this scenario?
+  - **Simplicity:** Exact-time matching is fast (O(n)) and easy to understand—users can glance at the schedule and spot conflicts visually.
+  - **Owner flexibility:** Pet owners often have buffer time between tasks (travel, cleanup). Exact matching avoids false positives and alarm fatigue.
+  - **Iterative refinement:** The owner can manually adjust times by 5-10 mins if durations overlap, which is more realistic than auto-rescheduling.
+  - **Trade-off cost:** Risk of over-booking time. Future enhancement: implement duration-aware overlap detection with sliding windows.
 
 ---
 
